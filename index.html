@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FHA Self-Sufficiency Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .icon {
+            width: 40px;
+            height: 40px;
+            color: #4f46e5;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #1f2937;
+        }
+
+        h2 {
+            font-size: 24px;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 18px;
+            color: #374151;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .result-box {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .result-box.blue {
+            background-color: #eff6ff;
+        }
+
+        .result-box.green {
+            background-color: #f0fdf4;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .result-row.border-top {
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding-top: 12px;
+            margin-top: 8px;
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .result-value {
+            font-weight: 600;
+        }
+
+        .result-value.bold {
+            font-weight: 700;
+        }
+
+        .analysis-box {
+            background: linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .analysis-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+        }
+
+        .analysis-label {
+            color: #374151;
+            font-size: 16px;
+        }
+
+        .analysis-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .analysis-value.green {
+            color: #16a34a;
+        }
+
+        .analysis-row.divider {
+            border-top: 2px solid #a5b4fc;
+            padding-top: 15px;
+            margin-top: 12px;
+        }
+
+        .status-box {
+            padding: 25px;
+            border-radius: 8px;
+            border: 2px solid;
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-box.success {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+
+        .status-box.warning {
+            background-color: #fef3c7;
+            border-color: #eab308;
+        }
+
+        .status-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .status-icon.success {
+            background-color: #22c55e;
+        }
+
+        .status-icon.warning {
+            background-color: #eab308;
+        }
+
+        .status-icon svg {
+            width: 32px;
+            height: 32px;
+            color: white;
+        }
+
+        .status-content h3 {
+            margin-bottom: 8px;
+        }
+
+        .status-content h3.success {
+            color: #166534;
+        }
+
+        .status-content h3.warning {
+            color: #854d0e;
+        }
+
+        .status-text {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .status-text.success {
+            color: #166534;
+        }
+
+        .status-text.warning {
+            color: #854d0e;
+        }
+
+        .notes-box {
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        .notes-box h4 {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+
+        .notes-box ul {
+            list-style-position: inside;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .notes-box li {
+            margin-bottom: 6px;
+        }
+
+        #results {
+            display: none;
+        }
+
+        #results.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <h1>FHA Self-Sufficiency Calculator</h1>
+            </div>
+
+            <p class="subtitle">
+                Calculate if your multi-unit property qualifies as self-sufficient under FHA guidelines. 
+                FHA allows 75 percent of rental income to offset housing expenses for 2-4 unit properties.
+            </p>
+
+            <div class="grid">
+                <div>
+                    <div class="section-title">
+                        <svg style="width: 24px; height: 24px; color: #4f46e5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Purchase Details
+                    </div>
+
+                    <div class="form-group">
+                        <label for="purchasePrice">Purchase Price</label>
+                        <input type="number" id="purchasePrice" placeholder="500000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="downPayment">Down Payment (percent)</label>
+                        <input type="number" id="downPayment" placeholder="3.5" step="0.5" value="3.5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interestRate">Interest Rate (percent)</label>
+                        <input type="number" id="interestRate" placeholder="6.5" step="0.125">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="units">Number of Units</label>
+                        <select id="units">
+                            <option value="2">2 Units (Duplex)</option>
+                            <option value="3">3 Units (Triplex)</option>
+                            <option value="4">4 Units (Fourplex)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="section-title">
+                        <svg style="width: 24px; height: 24px; color: #4f46e5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Monthly Expenses and Income
+                    </div>
+
+                    <div class="form-group">
+                        <label for="propertyTax">Annual Property Tax</label>
+                        <input type="number" id="propertyTax" placeholder="6000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="insurance">Annual Insurance</label>
+                        <input type="number" id="insurance" placeholder="1200">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hoaDues">Monthly HOA Dues</label>
+                        <input type="number" id="hoaDues" placeholder="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rentalIncome">Total Monthly Rental Income</label>
+                        <input type="number" id="rentalIncome" placeholder="3000">
+                        <p class="help-text">Combined rent from all non-owner occupied units</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" class="card">
+            <h2>Results</h2>
+
+            <div class="grid">
+                <div class="result-box blue">
+                    <h3>Loan Details</h3>
+                    <div class="result-row">
+                        <span class="result-label">Base Loan Amount:</span>
+                        <span class="result-value" id="loanAmount">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Upfront MIP (1.75 percent):</span>
+                        <span class="result-value" id="upfrontMIP">$0</span>
+                    </div>
+                    <div class="result-row border-top">
+                        <span class="result-label" style="font-weight: 500;">Total Financed:</span>
+                        <span class="result-value bold" id="totalFinanced">$0</span>
+                    </div>
+                </div>
+
+                <div class="result-box green">
+                    <h3>Monthly Payment Breakdown</h3>
+                    <div class="result-row">
+                        <span class="result-label">Principal and Interest:</span>
+                        <span class="result-value" id="monthlyPI">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Property Tax:</span>
+                        <span class="result-value" id="monthlyTax">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Insurance:</span>
+                        <span class="result-value" id="monthlyInsurance">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Monthly MIP:</span>
+                        <span class="result-value" id="monthlyMIP">$0</span>
+                    </div>
+                    <div class="result-row" id="hoaRow" style="display: none;">
+                        <span class="result-label">HOA Dues:</span>
+                        <span class="result-value" id="monthlyHOA">$0</span>
+                    </div>
+                    <div class="result-row border-top">
+                        <span class="result-label" style="font-weight: 500;">Total PITI:</span>
+                        <span class="result-value bold" id="totalPITI">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-box">
+                <h3>Self-Sufficiency Analysis</h3>
+                <div class="analysis-row">
+                    <span class="analysis-label">Total Monthly Rental Income:</span>
+                    <span class="analysis-value" id="totalRental">$0</span>
+                </div>
+                <div class="analysis-row">
+                    <span class="analysis-label">FHA Rental Offset (75 percent):</span>
+                    <span class="analysis-value green" id="rentalOffset">$0</span>
+                </div>
+                <div class="analysis-row">
+                    <span class="analysis-label">Total Housing Expense:</span>
+                    <span class="analysis-value" id="housingExpense">$0</span>
+                </div>
+                <div class="analysis-row divider">
+                    <span class="analysis-label" style="font-weight: 700;">Net Housing Expense:</span>
+                    <span class="analysis-value" style="font-size: 20px; font-weight: 700;" id="netExpense">$0</span>
+                </div>
+            </div>
+
+            <div id="statusBox" class="status-box">
+                <div class="status-icon">
+                    <svg id="statusIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+                </div>
+                <div class="status-content">
+                    <h3 id="statusTitle"></h3>
+                    <p class="status-text" id="statusRatio"></p>
+                    <p class="status-text" id="statusDescription"></p>
+                </div>
+            </div>
+
+            <div class="notes-box">
+                <h4>Important Notes:</h4>
+                <ul>
+                    <li>FHA allows 75 percent of rental income as an offset for 2-4 unit properties where you occupy one unit</li>
+                    <li>Rental income must be documented with lease agreements and market rent analysis</li>
+                    <li>You must have documented landlord experience or reserves typically equal to 6 months PITI</li>
+                    <li>Lender may require additional documentation and reserves for self-sufficiency claims</li>
+                    <li>This calculator is for estimation purposes only - consult with an FHA-approved lender for final approval</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2
+            }).format(value);
+        }
+
+        function calculate() {
+            var price = parseFloat(document.getElementById('purchasePrice').value) || 0;
+            var down = parseFloat(document.getElementById('downPayment').value) || 0;
+            var rate = parseFloat(document.getElementById('interestRate').value) || 0;
+            var tax = parseFloat(document.getElementById('propertyTax').value) || 0;
+            var ins = parseFloat(document.getElementById('insurance').value) || 0;
+            var hoa = parseFloat(document.getElementById('hoaDues').value) || 0;
+            var rental = parseFloat(document.getElementById('rentalIncome').value) || 0;
+
+            if (price === 0 || rate === 0) {
+                document.getElementById('results').classList.remove('show');
+                return;
+            }
+
+            var downPaymentAmount = price * (down / 100);
+            var loanAmount = price - downPaymentAmount;
+
+            var upfrontMIP = loanAmount * 0.0175;
+            var financedAmount = loanAmount + upfrontMIP;
+            
+            var annualMIPRate = down < 5 ? 0.0055 : 0.0050;
+            var monthlyMIP = (financedAmount * annualMIPRate) / 12;
+
+            var monthlyRate = rate / 100 / 12;
+            var numPayments = 360;
+            var monthlyPI = financedAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+                              (Math.pow(1 + monthlyRate, numPayments) - 1);
+
+            var totalMonthlyPayment = monthlyPI + (tax / 12) + (ins / 12) + hoa + monthlyMIP;
+
+            var rentalOffset = rental * 0.75;
+
+            var netHousingExpense = totalMonthlyPayment - rentalOffset;
+
+            var isSelfSufficient = rentalOffset >= totalMonthlyPayment;
+            var selfSufficiencyRatio = (rentalOffset / totalMonthlyPayment) * 100;
+
+            document.getElementById('loanAmount').textContent = formatCurrency(loanAmount);
+            document.getElementById('upfrontMIP').textContent = formatCurrency(upfrontMIP);
+            document.getElementById('totalFinanced').textContent = formatCurrency(financedAmount);
+            document.getElementById('monthlyPI').textContent = formatCurrency(monthlyPI);
+            document.getElementById('monthlyTax').textContent = formatCurrency(tax / 12);
+            document.getElementById('monthlyInsurance').textContent = formatCurrency(ins / 12);
+            document.getElementById('monthlyMIP').textContent = formatCurrency(monthlyMIP);
+            document.getElementById('monthlyHOA').textContent = formatCurrency(hoa);
+            document.getElementById('totalPITI').textContent = formatCurrency(totalMonthlyPayment);
+            document.getElementById('totalRental').textContent = formatCurrency(rental);
+            document.getElementById('rentalOffset').textContent = formatCurrency(rentalOffset);
+            document.getElementById('housingExpense').textContent = formatCurrency(totalMonthlyPayment);
+            document.getElementById('netExpense').textContent = formatCurrency(netHousingExpense);
+
+            if (hoa > 0) {
+                document.getElementById('hoaRow').style.display = 'flex';
+            } else {
+                document.getElementById('hoaRow').style.display = 'none';
+            }
+
+            var statusBox = document.getElementById('statusBox');
+            var statusIcon = document.getElementById('statusIcon');
+            var statusTitle = document.getElementById('statusTitle');
+            var statusRatio = document.getElementById('statusRatio');
+            var statusDescription = document.getElementById('statusDescription');
+
+            if (isSelfSufficient) {
+                statusBox.className = 'status-box success';
+                statusBox.querySelector('.status-icon').className = 'status-icon success';
+                statusIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />';
+                statusTitle.textContent = 'Property is Self-Sufficient!';
+                statusTitle.className = 'success';
+                statusRatio.className = 'status-text success';
+                statusDescription.className = 'status-text success';
+                statusDescription.textContent = 'The rental income (at 75 percent) fully covers the housing expenses. This property may qualify with $0 housing expense for DTI calculations under FHA guidelines.';
+            } else {
+                statusBox.className = 'status-box warning';
+                statusBox.querySelector('.status-icon').className = 'status-icon warning';
+                statusIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />';
+                statusTitle.textContent = 'Property is Not Self-Sufficient';
+                statusTitle.className = 'warning';
+                statusRatio.className = 'status-text warning';
+                statusDescription.className = 'status-text warning';
+                statusDescription.textContent = 'The rental income (at 75 percent) does not fully cover the housing expenses. The net housing expense will be counted toward your debt-to-income ratio.';
+            }
+
+            statusRatio.textContent = 'Self-Sufficiency Ratio: ' + selfSufficiencyRatio.toFixed(1) + ' percent';
+
+            document.getElementById('results').classList.add('show');
+        }
+
+        document.getElementById('purchasePrice').addEventListener('input', calculate);
+        document.getElementById('downPayment').addEventListener('input', calculate);
+        document.getElementById('interestRate').addEventListener('input', calculate);
+        document.getElementById('propertyTax').addEventListener('input', calculate);
+        document.getElementById('insurance').addEventListener('input', calculate);
+        document.getElementById('hoaDues').addEventListener('input', calculate);
+        document.getElementById('units').addEventListener('change', calculate);
+        document.getElementById('rentalIncome').addEventListener('input', calculate);
+    </script>
+</body>
+</html>
