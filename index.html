@@ -443,7 +443,7 @@
     <div class="container">
         <div class="header">
             <h1>FHA Self-Sufficiency Calculator</h1>
-            <p class="subtitle">Calculate how rental income from a 2-4 unit property can offset your housing expenses under FHA guidelines. FHA allows 75% of rental income to be used when you occupy one unit.</p>
+            <p class="subtitle">Calculate how rental income from a 3-4 unit property can offset your housing expenses under FHA guidelines. FHA allows 75% of rental income to be used as an offset for 3-4 unit properties when you occupy one unit.</p>
         </div>
 
         <div class="section">
@@ -467,11 +467,11 @@
                 <div class="input-group">
                     <label for="units">Number of Units</label>
                     <select id="units">
-                        <option value="2">2 Units</option>
-                        <option value="3">3 Units</option>
+                        <option value="2">2 Units (Duplex - No Offset)</option>
+                        <option value="3" selected>3 Units</option>
                         <option value="4">4 Units</option>
                     </select>
-                    <span class="help-text">FHA allows 2-4 unit properties</span>
+                    <span class="help-text">FHA self-sufficiency applies to 3-4 units only</span>
                 </div>
             </div>
         </div>
@@ -503,7 +503,7 @@
                 <div class="input-group">
                     <label for="rentalIncome">Total Monthly Rental Income</label>
                     <input type="number" id="rentalIncome" placeholder="3000" step="100">
-                    <span class="help-text">Combined monthly rent from all non-owner occupied units</span>
+                    <span class="help-text">Combined monthly rent from non-owner occupied units (only used for 3-4 unit properties)</span>
                 </div>
             </div>
         </div>
@@ -566,12 +566,12 @@
             </div>
 
             <div class="analysis-card">
-                <h3>Self-Sufficiency Analysis</h3>
-                <div class="analysis-row">
+                <h3 id="analysisTitle">Self-Sufficiency Analysis</h3>
+                <div class="analysis-row" id="rentalIncomeRow">
                     <span class="analysis-label">Total Monthly Rental Income:</span>
                     <span class="analysis-value" id="totalRental">$0</span>
                 </div>
-                <div class="analysis-row">
+                <div class="analysis-row" id="rentalOffsetRow">
                     <span class="analysis-label">FHA Rental Offset (75%):</span>
                     <span class="analysis-value" style="color: #16a34a;" id="rentalOffset">$0</span>
                 </div>
@@ -580,7 +580,7 @@
                     <span class="analysis-value" id="housingExpense">$0</span>
                 </div>
                 <div class="analysis-row divider">
-                    <span class="analysis-label" style="font-weight: 700;">Net Housing Expense:</span>
+                    <span class="analysis-label" style="font-weight: 700;" id="netExpenseLabel">Net Housing Expense:</span>
                     <span class="analysis-value highlight" id="netExpense">$0</span>
                 </div>
             </div>
@@ -603,7 +603,8 @@
             <div class="info-box">
                 <h4>Important Notes:</h4>
                 <ul>
-                    <li>FHA allows 75% of rental income as an offset for 2-4 unit properties where you occupy one unit</li>
+                    <li><strong>FHA self-sufficiency rules apply to 3-4 unit properties ONLY.</strong> Duplexes (2 units) do not qualify for rental income offset under FHA guidelines.</li>
+                    <li>For qualifying 3-4 unit properties, FHA allows 75% of rental income as an offset when you occupy one unit</li>
                     <li>Rental income must be documented with lease agreements and market rent analysis</li>
                     <li>You must have documented landlord experience or reserves typically equal to 6 months PITI</li>
                     <li>Lender may require additional documentation and reserves for self-sufficiency claims</li>
@@ -630,6 +631,7 @@
             const ins = parseFloat(document.getElementById('insurance').value) || 0;
             const hoa = parseFloat(document.getElementById('hoaDues').value) || 0;
             const rental = parseFloat(document.getElementById('rentalIncome').value) || 0;
+            const units = parseInt(document.getElementById('units').value) || 2;
 
             if (price === 0 || rate === 0) {
                 document.getElementById('results').classList.remove('show');
@@ -658,15 +660,18 @@
             // Total monthly payment (PITI + MIP)
             const totalMonthlyPayment = monthlyPI + (tax / 12) + (ins / 12) + hoa + monthlyMIP;
 
-            // FHA rental offset calculation (75% of rental income)
-            const rentalOffset = rental * 0.75;
-
-            // Net housing expense after rental offset
-            const netHousingExpense = totalMonthlyPayment - rentalOffset;
-
-            // Self-sufficiency determination
-            const isSelfSufficient = rentalOffset >= totalMonthlyPayment;
-            const selfSufficiencyRatio = (rentalOffset / totalMonthlyPayment) * 100;
+            // FHA rental offset calculation - ONLY for 3-4 units
+            let rentalOffset = 0;
+            let netHousingExpense = totalMonthlyPayment;
+            let isSelfSufficient = false;
+            let selfSufficiencyRatio = 0;
+            
+            if (units >= 3) {
+                rentalOffset = rental * 0.75;
+                netHousingExpense = totalMonthlyPayment - rentalOffset;
+                isSelfSufficient = rentalOffset >= totalMonthlyPayment;
+                selfSufficiencyRatio = (rentalOffset / totalMonthlyPayment) * 100;
+            }
 
             // Update display
             document.getElementById('loanAmount').textContent = formatCurrency(loanAmount);
@@ -685,8 +690,16 @@
 
             // Show/hide HOA row
             document.getElementById('hoaRow').style.display = hoa > 0 ? 'flex' : 'none';
+            
+            // Show/hide rental income rows for duplexes (only show for 3-4 units)
+            document.getElementById('rentalIncomeRow').style.display = units >= 3 ? 'flex' : 'none';
+            document.getElementById('rentalOffsetRow').style.display = units >= 3 ? 'flex' : 'none';
+            
+            // Update analysis title based on unit count
+            document.getElementById('analysisTitle').textContent = units === 2 ? 'Monthly Payment Analysis' : 'Self-Sufficiency Analysis';
+            document.getElementById('netExpenseLabel').textContent = units === 2 ? 'Total Monthly Payment:' : 'Net Housing Expense:';
 
-            // Update status card
+            // Update status card based on unit count
             const statusCard = document.getElementById('statusCard');
             const statusIconContainer = document.getElementById('statusIconContainer');
             const statusIcon = document.getElementById('statusIcon');
@@ -694,12 +707,25 @@
             const statusRatio = document.getElementById('statusRatio');
             const statusDescription = document.getElementById('statusDescription');
 
-            if (isSelfSufficient) {
+            if (units === 2) {
+                // Duplex - show info message
+                statusCard.className = 'status-card';
+                statusCard.style.background = 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)';
+                statusCard.style.border = '2px solid #94a3b8';
+                statusIconContainer.className = 'status-icon';
+                statusIconContainer.style.background = '#64748b';
+                statusIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />';
+                statusTitle.textContent = '2-Unit Property (Duplex)';
+                statusTitle.style.color = '#475569';
+                statusRatio.textContent = 'FHA self-sufficiency rules do not apply to duplexes';
+                statusDescription.textContent = 'For 2-unit properties, rental income cannot be used to offset housing expenses under FHA guidelines. The full PITI of ' + formatCurrency(totalMonthlyPayment) + ' will count toward your debt-to-income ratio. Consider a 3-4 unit property if you need rental offset benefits.';
+            } else if (isSelfSufficient) {
                 statusCard.className = 'status-card success';
                 statusIconContainer.className = 'status-icon success';
                 statusIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />';
                 statusTitle.textContent = 'Property is Self-Sufficient! ✓';
                 statusTitle.className = 'success';
+                statusRatio.textContent = 'Self-Sufficiency Ratio: ' + selfSufficiencyRatio.toFixed(1) + '%';
                 statusDescription.textContent = 'The rental income (at 75%) fully covers the housing expenses. This property may qualify with $0 housing expense for DTI calculations under FHA guidelines.';
             } else {
                 statusCard.className = 'status-card warning';
@@ -707,14 +733,42 @@
                 statusIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />';
                 statusTitle.textContent = 'Property is Not Self-Sufficient';
                 statusTitle.className = 'warning';
+                statusRatio.textContent = 'Self-Sufficiency Ratio: ' + selfSufficiencyRatio.toFixed(1) + '%';
                 statusDescription.textContent = 'The rental income (at 75%) does not fully cover the housing expenses. The net housing expense of ' + formatCurrency(netHousingExpense) + ' will be counted toward your debt-to-income ratio.';
             }
 
-            statusRatio.textContent = 'Self-Sufficiency Ratio: ' + selfSufficiencyRatio.toFixed(1) + '%';
-
-            // Generate suggestions if not self-sufficient
+            // Generate suggestions based on unit count
             const suggestionsSection = document.getElementById('suggestionsSection');
-            if (!isSelfSufficient) {
+            if (units === 2) {
+                // Show suggestion to upgrade to 3-4 unit property for duplexes
+                let suggestionsHTML = '<div class="suggestions-card">';
+                suggestionsHTML += '<h3>';
+                suggestionsHTML += '<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #f59e0b;">';
+                suggestionsHTML += '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />';
+                suggestionsHTML += '</svg>';
+                suggestionsHTML += 'Ways to Qualify for Rental Offset';
+                suggestionsHTML += '</h3>';
+                
+                suggestionsHTML += '<div class="suggestion-item">';
+                suggestionsHTML += '<div class="suggestion-title">🏘️ Consider a 3-4 Unit Property</div>';
+                suggestionsHTML += '<div class="suggestion-desc">FHA self-sufficiency rules only apply to properties with 3 or 4 units. By purchasing a triplex or fourplex instead of a duplex, you can use 75% of rental income to offset your housing expenses, potentially reducing your DTI to $0.</div>';
+                suggestionsHTML += '</div>';
+                
+                suggestionsHTML += '<div class="suggestion-item">';
+                suggestionsHTML += '<div class="suggestion-title">💰 Reduce Monthly Payment</div>';
+                suggestionsHTML += '<div class="suggestion-desc">Since rental offset is not available for duplexes, focus on reducing your total PITI payment through a larger down payment, lower interest rate, or shopping for better insurance/tax rates.</div>';
+                suggestionsHTML += '</div>';
+                
+                suggestionsHTML += '<div class="suggestion-item">';
+                suggestionsHTML += '<div class="suggestion-title">📊 Improve Your DTI</div>';
+                suggestionsHTML += '<div class="suggestion-desc">With no rental offset available, your full housing payment of <span class="highlight-value">' + formatCurrency(totalMonthlyPayment) + '</span> counts toward your debt-to-income ratio. Consider paying down other debts or increasing your income to qualify.</div>';
+                suggestionsHTML += '</div>';
+                
+                suggestionsHTML += '</div>';
+                
+                suggestionsSection.innerHTML = suggestionsHTML;
+                suggestionsSection.style.display = 'block';
+            } else if (!isSelfSufficient && units >= 3) {
                 const shortfall = totalMonthlyPayment - rentalOffset;
                 const additionalRentalNeeded = shortfall / 0.75; // Divide by 75% to get gross rental needed
                 
